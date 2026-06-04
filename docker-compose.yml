@@ -6,7 +6,7 @@ services:
     ports:
       - "8081:8080"
     env_file:
-      - ./server/.env
+      - ./.env
     environment:
       - NODE_ENV=production
       - CLIENT_URL=http://localhost:81

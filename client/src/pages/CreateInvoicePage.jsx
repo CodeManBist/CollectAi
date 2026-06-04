@@ -85,7 +85,7 @@ export default function CreateInvoicePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (INR) *</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">?</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">₹</span>
                   <input
                     type="number"
                     name="amount"

@@ -1,4 +1,5 @@
 import Invoice from '../models/invoice.model.js';
+import mongoose from 'mongoose';
 
 export const generateReminderMessage = async (req, res) => {
   try {
@@ -35,12 +36,18 @@ export const generateReminderMessage = async (req, res) => {
       max_tokens: 250,
     });
 
-    const message = completion.choices[0].message.content;
+    const message = completion?.choices?.[0]?.message?.content?.trim();
+    if (!message) {
+      return res.status(502).json({ message: 'Failed to generate reminder from OpenAI response' });
+    }
 
     await Invoice.findByIdAndUpdate(invoice._id, { $inc: { remainderCount: 1 } });
 
     res.status(200).json({ message });
   } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
     console.error('Reminder generation error:', error.message);
     res.status(500).json({ message: 'Failed to generate reminder' });
   }
