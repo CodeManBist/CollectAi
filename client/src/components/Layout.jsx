@@ -30,11 +30,11 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <aside className="w-60 bg-slate-900 flex flex-col fixed h-full z-10">
-        <div className="px-6 py-5 border-b border-slate-700/50">
+    <div className="flex h-screen bg-slate-950">
+      <aside className="w-60 bg-[#0d0d14] border-r border-white/5 flex flex-col fixed h-full z-10">
+        <div className="px-6 py-5 border-b border-white/5">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" />
               </svg>
@@ -55,8 +55,8 @@ export default function Layout({ children }) {
                 to={item.path}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                    : 'text-slate-500 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {item.icon}
@@ -66,7 +66,7 @@ export default function Layout({ children }) {
           })}
         </nav>
 
-        <div className="px-3 py-4 border-t border-slate-700/50">
+        <div className="px-3 py-4 border-t border-white/5">
           <div className="flex items-center gap-3 px-3 mb-2">
             <div className="w-8 h-8 bg-indigo-500/20 border border-indigo-500/30 rounded-full flex items-center justify-center text-indigo-300 text-sm font-bold shrink-0">
               {user?.name?.[0]?.toUpperCase()}
@@ -78,7 +78,7 @@ export default function Layout({ children }) {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 text-slate-400 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+            className="w-full flex items-center gap-2 text-slate-500 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-white/5 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
