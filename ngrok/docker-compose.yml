@@ -1,0 +1,13 @@
+services:
+  ngrok:
+    image: ngrok/ngrok:latest
+    env_file:
+      - ../.env
+    command: http --url=${NGROK_DOMAIN} client:80
+    restart: unless-stopped
+    networks:
+      - collectai_collectai-net
+
+networks:
+  collectai_collectai-net:
+    external: true
