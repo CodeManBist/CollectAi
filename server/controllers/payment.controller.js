@@ -25,7 +25,7 @@ export const createOrder = async (req, res) => {
         customer_id: invoice._id.toString(),
         customer_name: invoice.clientName,
         customer_email: invoice.clientEmail,
-        customer_phone: "9999999999",
+        customer_phone: invoice.clientPhone || "9999999999",
       },
       order_meta: {
         return_url: `${clientUrl}/payment-success?order_id={order_id}`,
