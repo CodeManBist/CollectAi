@@ -83,6 +83,7 @@ export const verifyPayment = async (
   res
 ) => {
   try {
+    console.log("VERIFY PAYMENT CALLED");
     const { orderId } = req.params;
 
     const response =
@@ -104,7 +105,7 @@ export const verifyPayment = async (
 
     if (orderStatus === "PAID") {
       invoice.status = "paid";
-      invoice.paymentStatus = "SUCCESS";
+      invoice.paymentStatus = "PAID";
       invoice.paidAt = new Date();
 
       await invoice.save();
@@ -148,7 +149,7 @@ export const cashfreeWebhook = async (
       if (invoice) {
         invoice.status = "paid";
         invoice.paymentStatus =
-          "SUCCESS";
+          "PAID";
         invoice.paidAt = new Date();
 
         await invoice.save();
