@@ -5,7 +5,7 @@ export const createInvoice = async (req, res) => {
 
   try {
 
-    const { clientName, clientEmail, amount, dueDate, description, paymentLink } = req.body;
+    const { clientName, clientEmail, clientPhone, amount, dueDate, description, paymentLink } = req.body;
 
 
 
@@ -25,6 +25,8 @@ export const createInvoice = async (req, res) => {
       clientName,
 
       clientEmail,
+
+      clientPhone,
 
       amount,
 
