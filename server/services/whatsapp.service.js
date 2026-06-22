@@ -29,33 +29,37 @@ client.initialize();
 
 export const sendWhatsAppMessage = async (phone, message) => {
   try {
-    console.log("================================");
-    console.log("isReady:", isReady);
-    console.log("phone:", phone);
-    console.log("message:", message);
-    console.log("================================");
-
     if (!isReady) {
       throw new Error("WhatsApp is not ready");
     }
 
-    const formattedPhone = `${phone}@c.us`;
+    await new Promise(resolve =>
+      setTimeout(resolve, 3000)
+    );
 
-    console.log("formattedPhone:", formattedPhone);
+    const cleanedPhone = phone.replace(/\D/g, "");
+    const finalPhone =
+      cleanedPhone.length === 10
+        ? `91${cleanedPhone}`
+        : cleanedPhone;
 
-    const isRegistered = await client.isRegisteredUser(formattedPhone);
+    const formattedPhone = `${finalPhone}@c.us`;
 
-    console.log("isRegistered:", isRegistered);
+    const isRegistered =
+      await client.isRegisteredUser(formattedPhone);
+
+    if (!isRegistered) {
+      throw new Error("WhatsApp number not found");
+    }
 
     const result = await client.sendMessage(
       formattedPhone,
       message
     );
 
-    console.log("Message sent:", result);
-
     return {
       success: true,
+      messageId: result.id.id,
     };
   } catch (error) {
     console.error("WhatsApp Error:", error);
