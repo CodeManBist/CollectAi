@@ -1,59 +1,205 @@
-import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 
-const { Client, LocalAuth } = pkg;
+import WhatsAppSession from "../models/whatsAppSession.model.js";
 
-let isReady = false;
+import {
+  createClient,
+  getClient,
+  hasClient,
+  removeClient,
+  setInitialized,
+  isInitialized,
+} from "./sessionManager.js";
 
-const client = new Client({
-  authStrategy: new LocalAuth({
-    clientId: "collectai",
-  }),
-});
+export const connectWhatsApp = async (userId) => {
+  if (hasClient(userId)) {
+    return {
+      success: true,
+      message: "Client already initialized.",
+    };
+  }
 
-client.on("qr", (qr) => {
-  console.log("\nSCAN THIS QR WITH WHATSAPP\n");
-  qrcode.generate(qr, { small: true });
-});
+  const client = createClient(userId);
 
-client.on("ready", () => {
-  isReady = true;
-  console.log("✅ WhatsApp Ready");
-});
+  // ==========================
+  // QR EVENT
+  // ==========================
+  client.on("qr", async (qr) => {
+    console.log(`QR Generated for ${userId}`);
 
-client.on("authenticated", () => {
-  console.log("✅ WhatsApp Authenticated");
-});
+    qrcode.generate(qr, {
+      small: true,
+    });
 
-client.initialize();
+    await WhatsAppSession.findOneAndUpdate(
+      { user: userId },
+      {
+        $set: {
+          user: userId,
+          status: "qr",
+          qr,
+        }
+      },
+      {
+        upsert: true,
+        new: true,
+      }
+    );
+  });
 
-export const sendWhatsAppMessage = async (phone, message) => {
-  try {
-    if (!isReady) {
-      throw new Error("WhatsApp is not ready");
+  // ==========================
+  // AUTHENTICATED
+  // ==========================
+  client.on("authenticated", async () => {
+    console.log(`Authenticated ${userId}`);
+
+    await WhatsAppSession.findOneAndUpdate(
+      { user: userId },
+      {
+        status: "authenticated",
+      }
+    );
+  });
+
+  // ==========================
+  // READY
+  // ==========================
+  client.on("ready", async () => {
+
+  setInitialized(userId);
+
+  console.log(`WhatsApp Ready ${userId}`);
+
+  const info = client.info;
+
+  await WhatsAppSession.findOneAndUpdate(
+    { user: userId },
+    {
+      status: "connected",
+      qr: null,
+      phoneNumber: info?.wid?.user || "",
+      profileName: info?.pushname || "",
+      lastConnected: new Date(),
     }
+  );
+});
 
-    await new Promise(resolve =>
-      setTimeout(resolve, 3000)
+  // ==========================
+  // AUTH FAILURE
+  // ==========================
+  client.on("auth_failure", async (msg) => {
+    console.log(`Authentication Failed ${userId}`);
+
+    await WhatsAppSession.findOneAndUpdate(
+      { user: userId },
+      {
+        status: "auth_failed",
+        connectionReason: msg,
+      }
+    );
+  });
+
+  // ==========================
+  // DISCONNECTED
+  // ==========================
+  client.on("disconnected", async (reason) => {
+    console.log(`Disconnected ${userId}`);
+
+    setInitialized(userId, false);
+
+    await WhatsAppSession.findOneAndUpdate(
+      { user: userId },
+      {
+        status: "disconnected",
+        qr: null,
+        lastDisconnected: new Date(),
+        connectionReason: reason,
+      }
     );
 
-    const cleanedPhone = phone.replace(/\D/g, "");
+    await removeClient(userId);
+  });
+  setInitialized(userId, false);
+
+  client.initialize();
+
+  return {
+    success: true,
+    message: "WhatsApp initialization started.",
+  };
+};
+
+export const getStatus = async (userId) => {
+  const session = await WhatsAppSession.findOne({ user: userId });
+
+  if (!session) {
+    return {
+      connected: false,
+      status: "not_connected",
+    };
+  }
+
+  return {
+    connected: session.status === "connected",
+    status: session.status,
+    phoneNumber: session.phoneNumber,
+    profileName: session.profileName,
+    lastConnected: session.lastConnected,
+  };
+};
+
+export const getQRCode = async (userId) => {
+  const session = await WhatsAppSession.findOne({ user: userId });
+
+  if (!session) {
+    return null;
+  }
+
+  return session.qr;
+};
+
+export const sendWhatsAppMessage = async (
+  userId,
+  phone,
+  message
+) => {
+  try {
+    if (!isInitialized(userId)) {
+      throw new Error(
+        "WhatsApp is still connecting."
+      );
+    }
+
+    const client = getClient(userId);
+
+    if (!client) {
+      throw new Error(
+        "WhatsApp is not connected."
+      );
+    }
+
+    const cleanedPhone = phone
+      .toString()
+      .replace(/\D/g, "");
+
     const finalPhone =
       cleanedPhone.length === 10
         ? `91${cleanedPhone}`
         : cleanedPhone;
 
-    const formattedPhone = `${finalPhone}@c.us`;
+    const chatId = `${finalPhone}@c.us`;
 
     const isRegistered =
-      await client.isRegisteredUser(formattedPhone);
+      await client.isRegisteredUser(chatId);
 
     if (!isRegistered) {
-      throw new Error("WhatsApp number not found");
+      throw new Error(
+        "Number is not registered on WhatsApp."
+      );
     }
 
     const result = await client.sendMessage(
-      formattedPhone,
+      chatId,
       message
     );
 
@@ -62,11 +208,49 @@ export const sendWhatsAppMessage = async (phone, message) => {
       messageId: result.id.id,
     };
   } catch (error) {
-    console.error("WhatsApp Error:", error);
+    console.error(
+      "WhatsApp Send Error:",
+      error.message
+    );
 
     return {
       success: false,
       error: error.message,
     };
   }
+};
+
+export const disconnectWhatsApp = async (
+  userId
+) => {
+  const client = getClient(userId);
+
+  if (!client) {
+    return {
+      success: false,
+      message: "No active client.",
+    };
+  }
+
+  try {
+    await client.logout();
+  } catch (err) {
+    console.error(err);
+  }
+
+  await removeClient(userId);
+
+  await WhatsAppSession.findOneAndUpdate(
+    { user: userId },
+    {
+      status: "disconnected",
+      qr: null,
+      connectionReason: "Manual Logout",
+      lastDisconnected: new Date(),
+    }
+  );
+
+  return {
+    success: true,
+  };
 };

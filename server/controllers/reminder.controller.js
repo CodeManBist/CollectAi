@@ -68,6 +68,7 @@ export const generateReminderMessage = async (req, res) => {
       }
 
       whatsappResult = await sendWhatsAppMessage(
+        req.user._id.toString(),
         invoice.clientPhone,
         whatsappMessage
       );
