@@ -11,8 +11,6 @@ import whatsappRoutes from './routes/whatsapp.routes.js';
 
 const app = express();
 
-import cors from "cors";
-
 app.use(
   cors({
     origin: [
