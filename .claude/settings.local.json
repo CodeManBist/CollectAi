@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(wsl -e bash -c \"cat /home/pavan/CollectAi/.gitignore\")",
-      "PowerShell(wsl -e bash -c \"docker network ls\")",
-      "PowerShell(wsl -e bash -c \"sudo docker network ls\")"
-    ]
-  }
-}

@@ -169,10 +169,8 @@ export const sendWhatsAppMessage = async (
   message
 ) => {
   try {
-    if (!isInitialized(userId)) {
-      throw new Error(
-        "WhatsApp is still connecting."
-      );
+    if (!hasClient(userId) || !isInitialized(userId)) {
+      throw new Error("WhatsApp is not connected.");
     }
 
     const client = getClient(userId);
@@ -225,37 +223,38 @@ export const sendWhatsAppMessage = async (
   }
 };
 
-export const disconnectWhatsApp = async (
-  userId
-) => {
+export const disconnectWhatsApp = async (userId) => {
   const client = getClient(userId);
 
   if (!client) {
+    // No client in memory, but clean the DB anyway
+    await WhatsAppSession.deleteOne({ user: userId });
+
     return {
-      success: false,
-      message: "No active client.",
+      success: true,
+      message: "Session removed.",
     };
   }
 
   try {
     await client.logout();
   } catch (err) {
-    console.error(err);
+    console.error("Logout Error:", err.message);
+  }
+
+  try {
+    await client.destroy();
+  } catch (err) {
+    console.error("Destroy Error:", err.message);
   }
 
   await removeClient(userId);
 
-  await WhatsAppSession.findOneAndUpdate(
-    { user: userId },
-    {
-      status: "disconnected",
-      qr: null,
-      connectionReason: "Manual Logout",
-      lastDisconnected: new Date(),
-    }
-  );
+  // Remove session document completely
+  await WhatsAppSession.deleteOne({ user: userId });
 
   return {
     success: true,
+    message: "Logged out successfully.",
   };
 };

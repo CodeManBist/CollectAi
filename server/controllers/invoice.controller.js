@@ -119,10 +119,10 @@ export const updateInvoice = async (req, res) => {
 
     }
 
-    const { clientName, clientEmail, amount, dueDate, description, paymentLink, status } = req.body;
+    const { clientName, clientEmail, clientPhone, amount, dueDate, description, paymentLink, status } = req.body;
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoice._id,
-      { clientName, clientEmail, amount, dueDate, description, paymentLink, status },
+      { clientName, clientEmail, clientPhone, amount, dueDate, description, paymentLink, status },
       { new: true, runValidators: true }
     );
 

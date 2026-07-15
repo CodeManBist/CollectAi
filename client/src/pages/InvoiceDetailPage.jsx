@@ -24,6 +24,7 @@ export default function InvoiceDetailPage() {
         setForm({
           clientName: inv.clientName,
           clientEmail: inv.clientEmail,
+          clientPhone: inv.clientPhone || '',
           amount: inv.amount,
           dueDate: inv.dueDate.split('T')[0],
           description: inv.description || '',
@@ -136,6 +137,10 @@ export default function InvoiceDetailPage() {
                   <div>
                     <label className={labelCls}>Client Email</label>
                     <input value={form.clientEmail} onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Client Phone</label>
+                    <input value={form.clientPhone} onChange={e => setForm(f => ({ ...f, clientPhone: e.target.value }))} className={inputCls} />
                   </div>
                 </div>
                 <div>
